@@ -1,0 +1,137 @@
+const fcsParser = (fcs) => {
+  try {
+    let lastIndexOfWord = 0
+    let precedenceCount = 0;
+    // feeId is the first 8 words of the 
+    const feeId = fcs.substring(0, 8)
+    // the feeId stopped at index 7
+    lastIndexOfWord = 7
+    let currency = ""
+    /* if the currency is *, it will start at index 9 and the next will begin at 11  
+    unless it will start at index 9 due to space in between */
+    const firstIndexOfCurrency = lastIndexOfWord + 2
+    if (fcs[firstIndexOfCurrency] === '*') {
+      currency = '*'
+      lastIndexOfWord = firstIndexOfCurrency
+    } else {
+      precedenceCount ++
+      /* The currency is a 3 letter word and the 3rd letter doesn't count
+      due to how substring function works */
+      const lastIndexOfCurrency = firstIndexOfCurrency + 3
+      currency = fcs.substring(firstIndexOfCurrency, lastIndexOfCurrency)
+      // the currency ends at index 12 (which is not counted in the calculation)
+      lastIndexOfWord = lastIndexOfCurrency - 1;
+    }
+    
+    let feeLocale = ""
+    // the locale is either * or 4 letters (LOCL or INTL)
+    const firstIndexOfFeeLocale = lastIndexOfWord + 2
+    if (fcs[firstIndexOfFeeLocale] === '*') {
+      feeLocale = "*"
+      lastIndexOfWord = firstIndexOfFeeLocale
+    } else {
+      precedenceCount ++
+      /* the feeLocale is a 4 letter word and the 4th letter doesn't count due
+      to how substring function works */
+      const lastIndexOfFeeLocale = firstIndexOfFeeLocale + 4;
+      feeLocale = fcs.substring(firstIndexOfFeeLocale, lastIndexOfFeeLocale);
+      // the currency ends at index 17 (which is not counted in the calculation)
+      lastIndexOfWord = lastIndexOfFeeLocale - 1
+    }
+    
+    const indexOfFirstParenthesisBorderingTheFeeEntityProperty = fcs.indexOf('(');
+    const feeEntity = fcs
+      .substring(
+        lastIndexOfWord + 2, 
+        indexOfFirstParenthesisBorderingTheFeeEntityProperty
+      )
+      if (feeEntity !== '*') {
+        precedenceCount++
+      }
+
+    // the fee Entity Property is between the parenthesis
+    const indexOfClosingParenthesisOfFeeEntityProperty = fcs.indexOf(')');
+    /* the fee entity property is between the index of the first parenthesis and 
+    the index of the second parenthesis + 1 (due to substring calucation) */
+    const feeEntityProperty = fcs
+      .substring(
+        indexOfFirstParenthesisBorderingTheFeeEntityProperty + 1, 
+        indexOfClosingParenthesisOfFeeEntityProperty
+      )
+    
+    if (feeEntityProperty !== '*') {
+      precedenceCount++
+    }
+
+    const feeType = determineFeeType(fcs);
+    const feeValue = determineValueOfFeeType({ feeType, fcs })
+
+    return { precedenceCount, feeId, currency, feeType, feeLocale, feeEntity, feeEntityProperty, feeValue  }
+  } catch(error) {
+    throw error;
+  }
+}
+
+const determineFeeType = (fcs) => {
+  /* last index of is used in case the feeId has "PERC", "FLAT" or "FLAT_PERC" 
+  in it */
+  const indexOfPerc = fcs.lastIndexOf('PERC')
+  const indexOfFlat = fcs.lastIndexOf('FLAT')
+  const indexOfFlatPerc = fcs.lastIndexOf('FLAT_PERC')
+  /* in the rare chance that the feeId has "PERC" OR "FLAT" the "FLAT_PERC" field also isn't present
+   and the fee Type is also there, choose the bigger one */
+  if (indexOfPerc > -1 && indexOfFlat > -1 && indexOfFlatPerc === -1) {
+    if (indexOfPerc > indexOfFlat) {
+      return 'PERC'
+    }
+    return 'FLAT'
+  }
+
+
+  /* Checking for an index of "FLAT" or "PERC" will clash with the index of "FLAT_PERC" 
+    value  add a condition of when indexOfFlatPerc isn't present*/
+  if (indexOfPerc > -1 && indexOfFlatPerc === -1) {
+    return 'PERC'
+  }
+  if (indexOfFlat > -1 && indexOfFlatPerc === -1) {
+    return 'FLAT'
+  }
+  if (indexOfFlatPerc > -1) {
+    return 'FLAT_PERC'
+  }
+}
+
+const determineValueOfFeeType = ({ feeType, fcs }) => {
+  let value = { perc: null, flat: null };
+
+  if (feeType === 'PERC') {
+    const startingIndexOfPerc = fcs.lastIndexOf('PERC');
+    const endingIndexOfPerc = startingIndexOfPerc + 3
+    value = { flat: null, perc: fcs.substring(endingIndexOfPerc + 2) };
+  }
+
+  if (feeType === 'FLAT') {
+    const startingIndexOfFlat = fcs.lastIndexOf('FLAT');
+    const endingIndexOfFlat = startingIndexOfFlat + 3
+    value = { flat: fcs.substring(endingIndexOfFlat + 2), perc: null };
+  }
+
+  if (feeType === 'FLAT_PERC') {
+    const indexOfSemiColonInValue = fcs.lastIndexOf(':');
+    const startingIndexOfFlatPerc = fcs.lastIndexOf('FLAT_PERC')
+    /* there are 8 characters between the starting index of flat_perc and
+    the ending index */
+    const endingIndexOfFlatPerc = startingIndexOfFlatPerc + 8
+    /* this is calculated from the space between the endingIndexOfFlatPerc
+    and the first index of flat value*/
+    const startingIndexOfFlatValue = endingIndexOfFlatPerc + 2;
+    const flatValue = fcs.substring(startingIndexOfFlatValue, indexOfSemiColonInValue);
+    const startingIndexOfPercValue = indexOfSemiColonInValue + 1;
+    const percValue = fcs.substring(startingIndexOfPercValue)
+    value = { flat: flatValue, perc: percValue };
+  }
+
+  return value;
+}
+
+export default fcsParser;
