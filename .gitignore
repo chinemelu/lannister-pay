@@ -1,2 +1,5 @@
 node_modules
 .env
+.tar.gz
+redis-6.2.4
+redis-6.2.4.tar.gz

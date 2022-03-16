@@ -1,7 +1,8 @@
 import express from 'express'
 import dotEnv from 'dotenv'
 
-import { postFeesController } from './controllers/finance.js'
+import { postFeesController, computeTransactionFeesController } from './controllers/fee.js'
+import { computeTransactionFeesValidationController } from './controllers/validation.js'
 
 dotEnv.config()
 
@@ -19,6 +20,11 @@ app.get('/', (req, res) => {
 })
 
 app.post('/fees', postFeesController)
+app.post(
+  '/compute-transaction-fee', 
+  computeTransactionFeesValidationController,  
+  computeTransactionFeesController
+)
 
 const port = process.env.PORT
 
