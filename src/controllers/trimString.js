@@ -18,9 +18,7 @@ const trimString = (req, res, next) => {
   req.body.PaymentEntity.Type = trimStringValues(PaymentEntity.Type)
   req.body.PaymentEntity.Country = trimStringValues(PaymentEntity.Country)
 
-  res.status(200).json({
-    request: req.body
-  })
+  next()
 }
 
 export default trimString

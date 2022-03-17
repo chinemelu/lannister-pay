@@ -1,4 +1,5 @@
 import fcsParser from "../helper/fcsParser.js"
+import { determineLocale, getApplicableFeeConfigurationSpec } from "../helper/fee.js"
 
 import { createClient } from "redis" 
 
@@ -55,6 +56,14 @@ export const postFeesController = async (req, res) => {
 
 export const computeTransactionFeesController = async (req, res) => {
   try {
+    const {
+      Currency,
+      CurrencyCountry,
+      PaymentEntity
+    } = req.body
+
+    const CountryOfEntity = PaymentEntity.Country;
+  
     const client = createClient();
     
     client.on('error', (err) => console.log('Redis Client Error', err));
@@ -65,23 +74,39 @@ export const computeTransactionFeesController = async (req, res) => {
       path: '.fcsArray'
     })
 
-
     await client.quit();
 
     if (parsedFcsArray) {
-      res.status(200).json({
-        statusCode: res.statusCode,
-        status: "ok",
-        message: 'Array retrieved from redis',
-        parsedFcsArray
+      // determine locale
+      const locale = determineLocale({ CountryOfEntity, CurrencyCountry })
+
+      const transactionRequestObject = {
+        paymentEntityID: PaymentEntity.ID,
+        paymentEntityIssue: PaymentEntity.Issuer,
+        paymentEntityBrand: PaymentEntity.Brand,
+        paymentEntityNumber: PaymentEntity.Number,
+        paymentEntitySixID: PaymentEntity.SixID,
+        paymentEntityType: PaymentEntity.Type,
+        locale,
+        Currency,
+      }
+
+      const applicableFeeConfigSpec = getApplicableFeeConfigurationSpec({ 
+        parsedFcsArray, 
+        transactionRequestObject,
       })
-      return
+
+      return res.status(200).json({
+        applicableFeeConfigSpec
+      })
     }
-    res.status(422).json({
+
+    res.status(404).json({
       statusCode: res.statusCode,
       status: 'error',
       message: 'There is no fee configuration spec'
     })
+    
   } catch(error) {
     res.status(500).json({
       error
