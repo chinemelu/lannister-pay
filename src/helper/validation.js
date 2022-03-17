@@ -1,6 +1,10 @@
-import { check } from 'express-validator';
+import { check, validationResult } from 'express-validator';
 
-export const isInputEmpty = (val) => !val
+export const isInputEmpty = (val) => isUndefined(val) || isEmptyString(val)
+
+export const isEmptyString = (val) => {
+  return isString(val) && !val.length
+}
 export const isInteger = (val) => {
   return typeof val !== 'undefined'
   && (val === parseInt(val, 10));
@@ -13,7 +17,7 @@ export const isValidCurrency = (val) => {
 }
 
 export const isValidTwoLetterCodeCountry = (val) => {
-  const listOfTwoLetterCodeCountries = listOfCountries().map(country => country.alpha2)
+  const listOfTwoLetterCodeCountries = listOfCountries().map(country => country.alpha2.toUpperCase())
   return listOfTwoLetterCodeCountries.includes(val)
 }
 
@@ -26,6 +30,52 @@ export const isValidEmail = (email) => {
   return emailValidationRegex.test(email);
 }
 
+export const isCustomerNameValid = (val) => {
+  const validationRegexForOnlyLettersAndSpace = /^[a-zA-Z\s]*$/
+  return validationRegexForOnlyLettersAndSpace.test(val);
+}
+
+export const isBoolean = (val) => {
+  return typeof (val) === "boolean"
+}
+
+export const isUndefined = (val) => {
+  return typeof (val) === 'undefined';
+}
+
+export const listOfPaymentEntityTypes = (val) => {
+  return [
+    'CREDIT-CARD',
+    'DEBIT-CARD',
+    'BANK-ACCOUNT',
+    'USSD',
+    'WALLET-ID'
+  ]
+}
+
+export const listOfPaymentEntityCardTypes = (val) => {
+  return [
+    'CREDIT-CARD',
+    'DEBIT-CARD',
+  ]
+}
+
+export const isValidPaymentEntityType = (val) => {
+  return listOfPaymentEntityTypes().includes(val)
+}
+
+export const paymentEntityTypeIsACard = (val) => {
+  return listOfPaymentEntityCardTypes().includes(val)
+}
+
+export const isValidMaskedCardNumber = (val) => {
+  const regexForValidation = /^\d{6}\*{6}\d{4}$/
+  return regexForValidation.test(val)
+}
+
+export const isValidSixID = (val) => {
+  return isPositiveInteger(val) && val.toString().length === 6
+}
 // {
 //   "ID": 91203, // must be number
 //   "Amount": 5000, // must be number
