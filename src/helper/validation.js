@@ -1,5 +1,3 @@
-import { check, validationResult } from 'express-validator';
-
 export const isInputEmpty = (val) => isUndefined(val) || isEmptyString(val)
 
 export const isEmptyString = (val) => {
@@ -13,12 +11,12 @@ export const isPositiveInteger = (val) => isInteger(val) && val >= 0
 export const isString = (val) => typeof val === 'string' || val instanceof String
 export const isValidCurrency = (val) => {
   const currenciesWithOnlyThreeLetterSymbol = listOfCurrencies().map(currency => currency.cc);
-  return currenciesWithOnlyThreeLetterSymbol.includes(val)
+  return currenciesWithOnlyThreeLetterSymbol.includes(val.trim())
 }
 
 export const isValidTwoLetterCodeCountry = (val) => {
   const listOfTwoLetterCodeCountries = listOfCountries().map(country => country.alpha2.toUpperCase())
-  return listOfTwoLetterCodeCountries.includes(val)
+  return listOfTwoLetterCodeCountries.includes(val.trim())
 }
 
 export const isValidEmail = (email) => {
@@ -27,7 +25,7 @@ export const isValidEmail = (email) => {
   if (email) {
     email = email.toLowerCase()
   }
-  return emailValidationRegex.test(email);
+  return emailValidationRegex.test(email.trim());
 }
 
 export const isCustomerNameValid = (val) => {
@@ -61,42 +59,21 @@ export const listOfPaymentEntityCardTypes = (val) => {
 }
 
 export const isValidPaymentEntityType = (val) => {
-  return listOfPaymentEntityTypes().includes(val)
+  return listOfPaymentEntityTypes().includes(val.trim())
 }
 
 export const paymentEntityTypeIsACard = (val) => {
-  return listOfPaymentEntityCardTypes().includes(val)
+  return listOfPaymentEntityCardTypes().includes(val.trim())
 }
 
 export const isValidMaskedCardNumber = (val) => {
   const regexForValidation = /^\d{6}\*{6}\d{4}$/
-  return regexForValidation.test(val)
+  return regexForValidation.test(val.trim())
 }
 
 export const isValidSixID = (val) => {
   return isPositiveInteger(val) && val.toString().length === 6
 }
-// {
-//   "ID": 91203, // must be number
-//   "Amount": 5000, // must be number
-//   "Currency": "NGN", // must be 3 letter string
-//   "CurrencyCountry": "NG", // must be 2 letter string
-//   "Customer": {
-//       "ID": 2211232, // must be number and not empty
-//       "EmailAddress": "anonimized29900@anon.io", // must be valid email and not empty
-//       "FullName": "Abel Eden", // must be string and not empty
-//       "BearsFee": true // must be boolean and not empty
-//   },
-//   "PaymentEntity": {
-//       "ID": 2203454, // must be number
-//       "Issuer": "GTBANK", // must be string
-//       "Brand": "MASTERCARD", // must be string
-//       "Number": "530191******2903", //must be string
-//       "SixID": 530191, // must be number
-//       "Type": "CREDIT-CARD", // must be string and one of CREDIT-CARD, DEBIT-CARD, BANK-ACCOUNT, USSD, WALLET-ID
-//       "Country": "NG" // must be two letter string
-//   }
-// }
 
 const listOfCurrencies = () => {
   return [

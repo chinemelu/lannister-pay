@@ -3,10 +3,9 @@ import dotEnv from 'dotenv'
 
 import { postFeesController, computeTransactionFeesController } from './controllers/fee.js'
 import { computeTransactionFeesValidationController } from './controllers/validation.js'
+import trimStringRequestValues from './controllers/trimString.js'
 
 dotEnv.config()
-
-const router = express.Router();
 
 const app = express()
 
@@ -22,7 +21,8 @@ app.get('/', (req, res) => {
 app.post('/fees', postFeesController)
 app.post(
   '/compute-transaction-fee', 
-  computeTransactionFeesValidationController,  
+  computeTransactionFeesValidationController, 
+  trimStringRequestValues, 
   computeTransactionFeesController
 )
 
