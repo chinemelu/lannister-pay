@@ -4,12 +4,13 @@ import { calculateAppliedFeeValue } from '../helper/calculateAppliedFeeValue.js'
 
 import { createClient } from "redis" 
 
-const redisPort = process.env.REDIS_PORT
-const redisHost = process.env.REDIS_HOSTNAME
 
 export const postFeesController = async (req, res) => {
   try {
-    const client = createClient();
+    const client = createClient({
+      url: process.env.HEROKU_REDIS_HOSTNAME
+    });
+
 
     client.on('error', (err) => console.log('Redis Client Error', err));
     await client.connect();
@@ -62,8 +63,11 @@ export const computeTransactionFeesController = async (req, res) => {
     } = req.body
 
     const CountryOfEntity = PaymentEntity.Country;
-  
-    const client = createClient();
+
+    const client = createClient({
+      url: process.env.HEROKU_REDIS_HOSTNAME
+    });
+
     
     client.on('error', (err) => console.log('Redis Client Error', err));
 
