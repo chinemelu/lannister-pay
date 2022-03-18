@@ -7,9 +7,15 @@ import { createClient } from "redis"
 
 export const postFeesController = async (req, res) => {
   try {
-    const client = createClient({
-      url: process.env.HEROKU_REDIS_HOSTNAME
-    });
+    
+    let client
+    if (process.env.REDIS_URL) {
+      client = createClient({
+        url: process.env.REDIS_URL
+      });
+    } else {
+      client = createClient()
+    }
 
 
     client.on('error', (err) => console.log('Redis Client Error', err));
@@ -64,9 +70,14 @@ export const computeTransactionFeesController = async (req, res) => {
 
     const CountryOfEntity = PaymentEntity.Country;
 
-    const client = createClient({
-      url: process.env.HEROKU_REDIS_HOSTNAME
-    });
+    let client
+    if (process.env.REDIS_URL) {
+      client = createClient({
+        url: process.env.REDIS_URL
+      });
+    } else {
+      client = createClient();
+    }
 
     
     client.on('error', (err) => console.log('Redis Client Error', err));
