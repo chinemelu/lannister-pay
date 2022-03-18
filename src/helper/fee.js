@@ -6,33 +6,52 @@ export const determineLocale = ({ CountryOfEntity, CurrencyCountry }) => {
 }
 
 export const getApplicableFeeConfigurationSpec = ({ parsedFcsArray, transactionRequestObject }) => {
-  const arrayOfApplicableFeeConfigSpec = [];
-  // paymentEntityID: PaymentEntity.ID,
-  // paymentEntityIssue: PaymentEntity.Issuer,
-  // paymentEntityBrand: PaymentEntity.Brand,
-  // paymentEntityNumber: PaymentEntity.Number,
-  // paymentEntitySixID: PaymentEntity.SixID,
-  // paymentEntityType: PaymentEntity.Type,
+  let feeApplicationFeeConfigurationSpec = { };
+  let maxPrecedenceCount = -Infinity
 
   parsedFcsArray.forEach(fcsItem => {
     const fcsFeeEntityProperty = fcsItem.feeEntityProperty
     const fcsLocale = fcsItem.feeLocale
     const fcsCurrency = fcsItem.currency
     const fcsFeeEntity = fcsItem.feeEntity
+    const fcsPrecedenceCount = fcsItem.precedenceCount
 
-    if (
-        conditionOne({ fcsFeeEntityProperty, transactionRequestObject }) 
-        && conditionTwo ({ fcsLocale, transactionRequestObject }) 
-        && conditionThree ({ fcsCurrency, transactionRequestObject }) 
-        && conditionFour ({ fcsFeeEntity, transactionRequestObject }) 
-      ) {
-        arrayOfApplicableFeeConfigSpec.push(fcsItem)
+    console.log('fcsLocaleTop', fcsLocale)
+
+
+    if (conditionsForChoosingFeeConfigurationSpec({
+      fcsFeeEntityProperty, 
+      transactionRequestObject, 
+      fcsLocale, 
+      fcsCurrency, 
+      fcsFeeEntity,
+      fcsPrecedenceCount,
+      maxPrecedenceCount
+    })) {
+        maxPrecedenceCount = fcsPrecedenceCount
+        feeApplicationFeeConfigurationSpec = { ...fcsItem }
       }
   })
-  return arrayOfApplicableFeeConfigSpec;
+  return feeApplicationFeeConfigurationSpec;
 }
 
-export const conditionOne = ({ fcsFeeEntityProperty, transactionRequestObject }) => {
+const conditionsForChoosingFeeConfigurationSpec = ({ 
+  fcsFeeEntityProperty, 
+  transactionRequestObject, 
+  fcsLocale, 
+  fcsCurrency, 
+  fcsFeeEntity,
+  fcsPrecedenceCount,
+  maxPrecedenceCount 
+}) => {
+
+  return conditionOne({ fcsFeeEntityProperty, transactionRequestObject }) 
+  && conditionTwo({ fcsLocale, transactionRequestObject }) 
+  && conditionThree({ fcsCurrency, transactionRequestObject }) 
+  && conditionFour({ fcsFeeEntity, transactionRequestObject }) 
+  && fcsPrecedenceCount > maxPrecedenceCount
+}
+const conditionOne = ({ fcsFeeEntityProperty, transactionRequestObject }) => {
     const paymentEntityID = transactionRequestObject.paymentEntityID
     const paymentEntityIssue = transactionRequestObject.paymentEntityIssue
     const paymentEntityBrand = transactionRequestObject.paymentEntityBrand
@@ -47,46 +66,48 @@ export const conditionOne = ({ fcsFeeEntityProperty, transactionRequestObject })
       fcsFeeEntityPropertyIsPaymentEntityID ({ fcsFeeEntityProperty, paymentEntityID })
 }
 
-export const propertyIsAny = (property) => {
-  return "*" === property
+const propertyIsAny = (property) => {
+  // console.log('property', property, property === "*");
+  return property === "*"
 }
 
 // condition One
-export const fcsFeeEntityPropertyIsPaymentEntityID = ({ feeEntityProperty, paymentEntityID}) => {
-  return paymentEntityID === feeEntityProperty
+const fcsFeeEntityPropertyIsPaymentEntityID = ({ fcsFeeEntityProperty, paymentEntityID }) => {
+  return paymentEntityID === fcsFeeEntityProperty
 }
-export const fcsFeeEntityPropertyIsPaymentEntityIssue = ({ feeEntityProperty, paymentEntityIssue}) => {
-  return paymentEntityIssue === feeEntityProperty
+const fcsFeeEntityPropertyIsPaymentEntityIssue = ({ fcsFeeEntityProperty, paymentEntityIssue }) => {
+  return paymentEntityIssue === fcsFeeEntityProperty
 }
-export const fcsFeeEntityPropertyIsPaymentEntityBrand = ({ feeEntityProperty, paymentEntityBrand}) => {
-  return paymentEntityBrand === feeEntityProperty
+const fcsFeeEntityPropertyIsPaymentEntityBrand = ({ fcsFeeEntityProperty, paymentEntityBrand }) => {
+  return paymentEntityBrand === fcsFeeEntityProperty
 }
-export const fcsFeeEntityPropertyIsPaymentEntityNumber = ({ feeEntityProperty, paymentEntityNumber}) => {
-  return paymentEntityNumber === feeEntityProperty
+const fcsFeeEntityPropertyIsPaymentEntityNumber = ({ fcsFeeEntityProperty, paymentEntityNumber}) => {
+  return paymentEntityNumber === fcsFeeEntityProperty
 }
-export const fcsFeeEntityPropertyIsPaymentEntitySixID = ({ feeEntityProperty, paymentEntitySixID}) => {
-  return paymentEntitySixID === feeEntityProperty
+const fcsFeeEntityPropertyIsPaymentEntitySixID = ({ fcsFeeEntityProperty, paymentEntitySixID}) => {
+  return paymentEntitySixID === fcsFeeEntityProperty
 }
 
-export const fcsFeeEntityPropertyIsAny = (fcsFeeEntityProperty) => propertyIsAny(fcsFeeEntityProperty)
-export const fcsLocaleIsAny = (fcsLocale) => propertyIsAny(fcsLocale)
-export const fcsCurrencyIsAny = (fcsCurrency) => propertyIsAny(fcsCurrency)
-export const fcsFeeEntityTypeIsAny = (fcsFeeEntityType) => propertyIsAny(fcsFeeEntityType)
+const fcsFeeEntityPropertyIsAny = (fcsFeeEntityProperty) => propertyIsAny(fcsFeeEntityProperty)
+const fcsLocaleIsAny = (fcsLocale) => propertyIsAny(fcsLocale)
+const fcsCurrencyIsAny = (fcsCurrency) => propertyIsAny(fcsCurrency)
+const fcsFeeEntityTypeIsAny = (fcsFeeEntityType) => propertyIsAny(fcsFeeEntityType)
 
 // condition two
-export const conditionTwo = ({ fcsLocale, transactionRequestObject }) => {
+const conditionTwo = ({ fcsLocale, transactionRequestObject }) => {
   const requestLocale = transactionRequestObject.locale
-  return (fcsLocale === requestLocale) || fcsLocaleIsAny(fcsLocale);
+      console.log('fcsBottom', fcsLocale)
+  return (requestLocale === fcsLocale) || fcsLocaleIsAny(fcsLocale);
 }
 
 // condition three
-export const conditionThree = ({ fcsCurrency, transactionRequestObject }) => {
+const conditionThree = ({ fcsCurrency, transactionRequestObject }) => {
   const requestCurrency = transactionRequestObject.Currency
   return (fcsCurrency === requestCurrency) || fcsCurrencyIsAny(fcsCurrency);
 }
 
 // condition four
-export const conditionFour = ({ fcsFeeEntity, transactionRequestObject }) => {
-  const requestFeeEntity = transactionRequestObject.PaymentEntityType
+const conditionFour = ({ fcsFeeEntity, transactionRequestObject }) => {
+  const requestFeeEntity = transactionRequestObject.paymentEntityType
   return (fcsFeeEntity === requestFeeEntity) || fcsFeeEntityTypeIsAny(fcsFeeEntity);
 }

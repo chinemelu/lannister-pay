@@ -94,8 +94,11 @@ export const computeTransactionFeesValidationController = (req, res, next) => {
   let isPaymentEntityNumberEmpty = true
   let isPaymentEntityNumberValid = false
   let isPaymentEntityNumberAString = false
+
   let isPaymentEntitySixIDEmpty = true
   let isPaymentEntitySixIDValid = false
+  let isPaymentEntitySixIDAString = false
+
   let isPaymentEntityTypeEmpty = true
   let isPaymentEntityTypeAString = false
   let isPaymentEntityTypeValid = false
@@ -134,7 +137,10 @@ export const computeTransactionFeesValidationController = (req, res, next) => {
 
   if (!isPaymentEntityObjectUndefined && !isUndefined(PaymentEntity.SixID)) {
     isPaymentEntitySixIDEmpty = isInputEmpty(PaymentEntity.SixID)
-    isPaymentEntitySixIDValid = isValidSixID(PaymentEntity.SixID)
+    isPaymentEntitySixIDAString = isString(PaymentEntity.SixID)
+    if (isPaymentEntitySixIDAString) {
+      isPaymentEntitySixIDValid = isValidSixID(PaymentEntity.SixID, PaymentEntity.Number)
+    }
   }
 
   if (!isPaymentEntityObjectUndefined && !isUndefined(PaymentEntity.Type)) {
@@ -284,8 +290,12 @@ export const computeTransactionFeesValidationController = (req, res, next) => {
     errors.PaymentEntitySixID = 'Payment Entity SixID is required'
   }
 
-  if (!isPaymentEntitySixIDEmpty && !isPaymentEntitySixIDValid) {
-    errors.PaymentEntitySixID = 'The SixID should be a 6 digit positive integer'
+  if (!isPaymentEntitySixIDEmpty && !isPaymentEntitySixIDAString) {
+    errors.PaymentEntitySixID = 'Payment Entity SixID must be a string'
+  }
+
+  if (!isPaymentEntitySixIDEmpty && isPaymentEntitySixIDAString && !isPaymentEntityNumberEmpty && !isPaymentEntitySixIDValid) {
+    errors.PaymentEntitySixID = 'The SixID must be 6 letters and it should correspond to the first six digits of the card number'
   }
 
   // payment entity number

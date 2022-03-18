@@ -1,5 +1,6 @@
 import fcsParser from "../helper/fcsParser.js"
 import { determineLocale, getApplicableFeeConfigurationSpec } from "../helper/fee.js"
+import { calculateAppliedFeeValue } from '../helper/calculateAppliedFeeValue.js'
 
 import { createClient } from "redis" 
 
@@ -24,7 +25,6 @@ export const postFeesController = async (req, res) => {
       return
     }
 
-
     const unparsedFcsArray = unparsedFcsString.split(/\r\n|\r|\n/)
 
 
@@ -42,10 +42,7 @@ export const postFeesController = async (req, res) => {
     await client.quit();
 
     res.status(200).json({
-      statusCode: 200,
       status: "ok",
-      message: 'Array saved to redis',
-      parsedFcsArray
     })
   } catch(error) {
       res.status(500).json({
@@ -59,7 +56,9 @@ export const computeTransactionFeesController = async (req, res) => {
     const {
       Currency,
       CurrencyCountry,
-      PaymentEntity
+      PaymentEntity,
+      Amount,
+      Customer,
     } = req.body
 
     const CountryOfEntity = PaymentEntity.Country;
@@ -96,15 +95,25 @@ export const computeTransactionFeesController = async (req, res) => {
         transactionRequestObject,
       })
 
-      return res.status(200).json({
-        applicableFeeConfigSpec
+      const noApplicableFeeConfigSpec = !Object.keys(applicableFeeConfigSpec).length
+
+      if (noApplicableFeeConfigSpec) {
+        return res.status(404).json({
+          Error: 'There is no fee configuration specification for this transaction',
+        })
+      }
+
+      const feeValueObject = calculateAppliedFeeValue({ 
+        fcs: applicableFeeConfigSpec, 
+        Amount, 
+        CustomerBearsFee: Customer.BearsFee 
       })
+
+      return res.status(200).json(feeValueObject)
     }
 
     res.status(404).json({
-      statusCode: res.statusCode,
-      status: 'error',
-      message: 'There is no fee configuration spec'
+      Error: 'There is no fee configuration specification available'
     })
     
   } catch(error) {

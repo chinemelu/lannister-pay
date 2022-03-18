@@ -71,8 +71,9 @@ export const isValidMaskedCardNumber = (val) => {
   return regexForValidation.test(val.trim())
 }
 
-export const isValidSixID = (val) => {
-  return isPositiveInteger(val) && val.toString().length === 6
+export const isValidSixID = (SixID, CardNumber) => {
+  const firstSixDigitsOfCardNumber = CardNumber.substring(0, 6);
+  return SixID.toString().length === 6 && SixID === firstSixDigitsOfCardNumber
 }
 
 const listOfCurrencies = () => {
