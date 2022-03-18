@@ -26,6 +26,12 @@ app.post(
   computeTransactionFeesController
 )
 
+app.use((req, res) => {
+  res.status(404).json({
+    message: 'This page is not available'
+  });
+});
+
 const port = process.env.PORT || 6000
 
 app.listen(port, () => {
