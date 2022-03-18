@@ -26,7 +26,7 @@ app.post(
   computeTransactionFeesController
 )
 
-const port = process.env.PORT
+const port = process.env.PORT || 6000
 
 app.listen(port, () => {
   console.log(`Lannister pay running on port ${port}`);

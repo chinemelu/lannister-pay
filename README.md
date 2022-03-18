@@ -54,8 +54,6 @@ The steps written below are for Heroku Deployment
 ## Built With
 * [express](https://expressjs.com/) - Fast, unopinionated, minimalist web framework for Node.js
 * [dotenv](https://www.npmjs.com/package/dotenv) - Dotenv is a zero-dependency module that loads environment variables from a .env file into process.env
-* [Redis](https://github.com/redis/node-redis) - node-redis is a modern, high performance Redis client for Node.js with built-in support for Redis 6.2 commands and modules including RediSearch and RedisJSON.
-
 
 ## Authors
 * Chinemelu Anthony Nwosu 

@@ -1,25 +1,11 @@
 import fcsParser from "../helper/fcsParser.js"
 import { determineLocale, getApplicableFeeConfigurationSpec } from "../helper/fee.js"
 import { calculateAppliedFeeValue } from '../helper/calculateAppliedFeeValue.js'
-
-import { createClient } from "redis" 
-
+import { readFile, writeFile } from "../helper/file.js"
+import { FCS_ARRAY_TEXT_FILE } from '../constants/file.js'
 
 export const postFeesController = async (req, res) => {
   try {
-    
-    let client
-    if (process.env.REDIS_URL) {
-      client = createClient({
-        url: process.env.REDIS_URL
-      });
-    } else {
-      client = createClient()
-    }
-
-
-    client.on('error', (err) => console.log('Redis Client Error', err));
-    await client.connect();
 
     const unparsedFcsString = req.body.FeeConfigurationSpec
 
@@ -37,16 +23,14 @@ export const postFeesController = async (req, res) => {
 
     
       // validate each array and if error, throw
-      // save the array to redis if there is no issue
+      // save the array to file if there is no issue
 
     const parsedFcsArray = unparsedFcsArray.map(arrayElem => fcsParser(arrayElem))
-    const objectToSaveToRedis = {
-      fcsArray: parsedFcsArray
-    }
 
-    await client.json.set('parsedFcsArray', '.', objectToSaveToRedis)
+    // the array is converted to a string as a valid parameter for the writeFile function
+    const stringifiedParsedFcsArray = JSON.stringify(parsedFcsArray)
 
-    await client.quit();
+    await writeFile(FCS_ARRAY_TEXT_FILE, stringifiedParsedFcsArray)
 
     res.status(200).json({
       status: "ok",
@@ -70,27 +54,17 @@ export const computeTransactionFeesController = async (req, res) => {
 
     const CountryOfEntity = PaymentEntity.Country;
 
-    let client
-    if (process.env.REDIS_URL) {
-      client = createClient({
-        url: process.env.REDIS_URL
-      });
-    } else {
-      client = createClient();
+    // the parsed fcs Array will come as a json string
+    const stringifiedParsedFcsArray = await readFile(FCS_ARRAY_TEXT_FILE)
+
+    let parsedFcsArray = []
+
+    if (stringifiedParsedFcsArray) {
+      parsedFcsArray = JSON.parse(stringifiedParsedFcsArray)
     }
 
-    
-    client.on('error', (err) => console.log('Redis Client Error', err));
-
-    await client.connect();
-
-    const parsedFcsArray = await client.json.get('parsedFcsArray', {
-      path: '.fcsArray'
-    })
-
-    await client.quit();
-
-    if (parsedFcsArray) {
+    const thereIsContentInTheFcsArray = parsedFcsArray.length > 0
+    if (thereIsContentInTheFcsArray) {
       // determine locale
       const locale = determineLocale({ CountryOfEntity, CurrencyCountry })
 
@@ -128,7 +102,7 @@ export const computeTransactionFeesController = async (req, res) => {
     }
 
     res.status(404).json({
-      Error: 'There is no fee configuration specification available'
+      Error: 'There is no fee configuration specification on the server'
     })
     
   } catch(error) {

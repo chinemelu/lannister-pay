@@ -1,3 +1,5 @@
+import { ASTERISK } from "../constants/symbol.js";
+
 const fcsParser = (fcs) => {
   let indexOfLastLetterBeforeSpace = 0
   let precedenceCount = 0;
@@ -9,8 +11,8 @@ const fcsParser = (fcs) => {
   /* if the currency is *, it will start at index 9 and the next will begin at 11  
   unless it will start at index 9 due to space in between */
   const firstIndexOfCurrency = indexOfLastLetterBeforeSpace + 2
-  if (fcs[firstIndexOfCurrency] === '*') {
-    currency = '*'
+  if (fcs[firstIndexOfCurrency] === ASTERISK) {
+    currency = ASTERISK
     indexOfLastLetterBeforeSpace = firstIndexOfCurrency
   } else {
     precedenceCount ++
@@ -25,8 +27,8 @@ const fcsParser = (fcs) => {
   let feeLocale = ""
   // the locale is either * or 4 letters (LOCL or INTL)
   const firstIndexOfFeeLocale = indexOfLastLetterBeforeSpace + 2
-  if (fcs[firstIndexOfFeeLocale] === '*') {
-    feeLocale = "*"
+  if (fcs[firstIndexOfFeeLocale] === ASTERISK) {
+    feeLocale = ASTERISK
     indexOfLastLetterBeforeSpace = firstIndexOfFeeLocale
   } else {
     precedenceCount ++
@@ -44,7 +46,7 @@ const fcsParser = (fcs) => {
       indexOfLastLetterBeforeSpace + 2, 
       indexOfFirstParenthesisBorderingTheFeeEntityProperty
     )
-    if (feeEntity !== '*') {
+    if (feeEntity !== ASTERISK) {
       precedenceCount++
     }
 
@@ -58,7 +60,7 @@ const fcsParser = (fcs) => {
       indexOfClosingParenthesisOfFeeEntityProperty
     )
   
-  if (feeEntityProperty !== '*') {
+  if (feeEntityProperty !== ASTERISK) {
     precedenceCount++
   }
 

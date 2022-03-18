@@ -1,8 +1,11 @@
+import { LOCL_TEXT, INTL_TEXT } from "../constants/locale.js"
+import { ASTERISK } from "../constants/symbol.js"
+
 export const determineLocale = ({ CountryOfEntity, CurrencyCountry }) => {
   if (CountryOfEntity === CurrencyCountry) {
-    return 'LOCL'
+    return LOCL_TEXT
   }
-  return 'INTL'
+  return INTL_TEXT
 }
 
 export const getApplicableFeeConfigurationSpec = ({ parsedFcsArray, transactionRequestObject }) => {
@@ -15,9 +18,6 @@ export const getApplicableFeeConfigurationSpec = ({ parsedFcsArray, transactionR
     const fcsCurrency = fcsItem.currency
     const fcsFeeEntity = fcsItem.feeEntity
     const fcsPrecedenceCount = fcsItem.precedenceCount
-
-    console.log('fcsLocaleTop', fcsLocale)
-
 
     if (conditionsForChoosingFeeConfigurationSpec({
       fcsFeeEntityProperty, 
@@ -52,6 +52,11 @@ const conditionsForChoosingFeeConfigurationSpec = ({
   && fcsPrecedenceCount > maxPrecedenceCount
 }
 const conditionOne = ({ fcsFeeEntityProperty, transactionRequestObject }) => {
+  /* 
+    in this condition, for it to be true, one of payment entity's ID
+    Issue, Brand, Number, SixID would be equal to the fee entity property in the fee configuration spec
+    or the fee entity property in the fee config spec will be '*'
+  */
     const paymentEntityID = transactionRequestObject.paymentEntityID
     const paymentEntityIssue = transactionRequestObject.paymentEntityIssue
     const paymentEntityBrand = transactionRequestObject.paymentEntityBrand
@@ -67,8 +72,7 @@ const conditionOne = ({ fcsFeeEntityProperty, transactionRequestObject }) => {
 }
 
 const propertyIsAny = (property) => {
-  // console.log('property', property, property === "*");
-  return property === "*"
+  return property === ASTERISK
 }
 
 // condition One
@@ -95,19 +99,34 @@ const fcsFeeEntityTypeIsAny = (fcsFeeEntityType) => propertyIsAny(fcsFeeEntityTy
 
 // condition two
 const conditionTwo = ({ fcsLocale, transactionRequestObject }) => {
+  /* 
+    in this condition, for it to be true, the calculated locale  
+    from the provided CurrencyCountry and payment entity country
+    will be equal to that in the fee configuration spec or the locale in 
+    the spec will be '*'
+  */
   const requestLocale = transactionRequestObject.locale
-      console.log('fcsBottom', fcsLocale)
   return (requestLocale === fcsLocale) || fcsLocaleIsAny(fcsLocale);
 }
 
 // condition three
 const conditionThree = ({ fcsCurrency, transactionRequestObject }) => {
+  /* 
+    in this condition, for it to be true, the currency from the provided transaction 
+    details will be equal to that in the fee configuration spec or the currency in the spec
+    will be '*'
+  */
   const requestCurrency = transactionRequestObject.Currency
   return (fcsCurrency === requestCurrency) || fcsCurrencyIsAny(fcsCurrency);
 }
 
 // condition four
 const conditionFour = ({ fcsFeeEntity, transactionRequestObject }) => {
+  /* 
+    in this condition, for it to be true, the entity type from the provided transaction 
+    details will be equal to that in the fee configuration spec or the entity type in the spec
+    will be '*'
+  */
   const requestFeeEntity = transactionRequestObject.paymentEntityType
   return (fcsFeeEntity === requestFeeEntity) || fcsFeeEntityTypeIsAny(fcsFeeEntity);
 }
