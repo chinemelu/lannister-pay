@@ -32,7 +32,7 @@ app.use((req, res) => {
   });
 });
 
-const port = process.env.PORT || 6000
+const port = process.env.PORT || 3000
 
 app.listen(port, () => {
   console.log(`Lannister pay running on port ${port}`);
