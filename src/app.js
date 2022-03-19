@@ -2,8 +2,9 @@ import express from 'express'
 import dotEnv from 'dotenv'
 
 import { postFeesController, computeTransactionFeesController } from './controllers/fee.js'
-import { computeTransactionFeesValidationController } from './controllers/validation.js'
-import trimStringRequestValues from './controllers/trimString.js'
+import { computeTransactionFeesValidationMiddleware } from './middleware/validation.js'
+import trimStringRequestValues from './middleware/trimString.js'
+import validateFcs from './middleware/validateFcs.js'
 
 dotEnv.config()
 
@@ -18,10 +19,15 @@ app.get('/', (req, res) => {
   res.send('Welcome to lannister pay')
 })
 
-app.post('/fees', postFeesController)
+app.post(
+  '/fees', 
+  validateFcs,
+  postFeesController
+)
+
 app.post(
   '/compute-transaction-fee', 
-  computeTransactionFeesValidationController, 
+  computeTransactionFeesValidationMiddleware, 
   trimStringRequestValues, 
   computeTransactionFeesController
 )

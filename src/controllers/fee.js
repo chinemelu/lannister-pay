@@ -12,18 +12,13 @@ export const postFeesController = async (req, res) => {
 
     if (!unparsedFcsString) {
       res.status(400).json({
-        message: 'No Fee Configuration Spec',
+        message: 'No Fee Configuration Specification included',
         statusCode: 400,
       })
       return
     }
 
     const unparsedFcsArray = unparsedFcsString.split(/\r\n|\r|\n/)
-
-
-    
-      // validate each array and if error, throw
-      // save the array to file if there is no issue
 
     const parsedFcsArray = unparsedFcsArray.map(arrayElem => fcsParser(arrayElem))
 

@@ -1,0 +1,5 @@
+export const CREDIT_CARD = 'CREDIT-CARD'
+export const DEBIT_CARD = 'DEBIT-CARD'
+export const BANK_ACCOUNT = 'BANK-ACCOUNT'
+export const USSD = 'USSD'
+export const WALLET_ID = 'WALLET-ID'

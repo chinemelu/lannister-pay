@@ -1,4 +1,5 @@
-import { ASTERISK } from "../constants/symbol.js";
+import { ASTERISK, COLON } from "../constants/symbol.js";
+import { PERC, FLAT, FLAT_PERC } from '../constants/fcs.js'
 
 const fcsParser = (fcs) => {
   let indexOfLastLetterBeforeSpace = 0
@@ -73,58 +74,61 @@ const fcsParser = (fcs) => {
 const determineFeeType = (fcs) => {
   /* last index of is used in case the feeId has "PERC", "FLAT" or "FLAT_PERC" 
   in it */
-  const indexOfPerc = fcs.lastIndexOf('PERC')
-  const indexOfFlat = fcs.lastIndexOf('FLAT')
-  const indexOfFlatPerc = fcs.lastIndexOf('FLAT_PERC')
-  /* in the rare chance that the feeId has "PERC" OR "FLAT" the "FLAT_PERC" field also isn't present
-   and the fee Type is also there, choose the bigger one */
+  const indexOfPerc = fcs.lastIndexOf(PERC)
+  const indexOfFlat = fcs.lastIndexOf(FLAT)
+  const indexOfFlatPerc = fcs.lastIndexOf(FLAT_PERC)
+  /* in the rare chance that the feeId has "PERC" OR "FLAT" and the "FLAT_PERC" field also isn't present.
+  Choose the bigger one for the feeType since it is closer to the end */
   if (indexOfPerc > -1 && indexOfFlat > -1 && indexOfFlatPerc === -1) {
     if (indexOfPerc > indexOfFlat) {
-      return 'PERC'
+      return PERC
     }
-    return 'FLAT'
+    return FLAT
   }
 
 
   /* Checking for an index of "FLAT" or "PERC" will clash with the index of "FLAT_PERC" 
     value  add a condition of when indexOfFlatPerc isn't present*/
   if (indexOfPerc > -1 && indexOfFlatPerc === -1) {
-    return 'PERC'
+    // if PERC is present but no FLAT_PERC
+    return PERC
   }
   if (indexOfFlat > -1 && indexOfFlatPerc === -1) {
-    return 'FLAT'
+    // if FLAT is present but no FLAT_PERC
+    return FLAT
   }
   if (indexOfFlatPerc > -1) {
-    return 'FLAT_PERC'
+    // if FLAT_PERC is present
+    return FLAT_PERC
   }
 }
 
 const determineValueOfFeeType = ({ feeType, fcs }) => {
   let value = { perc: 0, flat: 0 }
 
-  if (feeType === 'PERC') {
-    const startingIndexOfPerc = fcs.lastIndexOf('PERC')
+  if (feeType === PERC) {
+    const startingIndexOfPerc = fcs.lastIndexOf(PERC)
     const endingIndexOfPerc = startingIndexOfPerc + 3
     value.perc = Number(fcs.substring(endingIndexOfPerc + 2))
   }
 
-  if (feeType === 'FLAT') {
-    const startingIndexOfFlat = fcs.lastIndexOf('FLAT')
+  if (feeType === FLAT) {
+    const startingIndexOfFlat = fcs.lastIndexOf(FLAT)
     const endingIndexOfFlat = startingIndexOfFlat + 3
     value.flat = Number(fcs.substring(endingIndexOfFlat + 2))
   }
 
-  if (feeType === 'FLAT_PERC') {
-    const indexOfSemiColonInValue = fcs.lastIndexOf(':');
-    const startingIndexOfFlatPerc = fcs.lastIndexOf('FLAT_PERC')
+  if (feeType === FLAT_PERC) {
+    const indexOfColonInValue = fcs.lastIndexOf(COLON);
+    const startingIndexOfFlatPerc = fcs.lastIndexOf(FLAT_PERC)
     /* there are 8 characters between the starting index of flat_perc and
     the ending index */
     const endingIndexOfFlatPerc = startingIndexOfFlatPerc + 8
     /* this is calculated from the space between the endingIndexOfFlatPerc
     and the first index of flat value*/
     const startingIndexOfFlatValue = endingIndexOfFlatPerc + 2
-    const flatValue = fcs.substring(startingIndexOfFlatValue, indexOfSemiColonInValue);
-    const startingIndexOfPercValue = indexOfSemiColonInValue + 1
+    const flatValue = fcs.substring(startingIndexOfFlatValue, indexOfColonInValue);
+    const startingIndexOfPercValue = indexOfColonInValue + 1
     const percValue = fcs.substring(startingIndexOfPercValue)
     value.flat = Number(flatValue)
     value.perc = Number(percValue)

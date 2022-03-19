@@ -14,7 +14,7 @@ import {
   paymentEntityTypeIsACard
 } from '../helper/validation.js'
 
-export const computeTransactionFeesValidationController = (req, res, next) => {
+export const computeTransactionFeesValidationMiddleware = (req, res, next) => {
   const { 
     ID, 
     Amount, 
@@ -35,7 +35,12 @@ export const computeTransactionFeesValidationController = (req, res, next) => {
   // currency
   const isCurrencyEmpty = isInputEmpty(Currency)
   const isCurrencyAString = isString(Currency)
-  const isCurrencyValid = isValidCurrency(Currency)
+
+  let isCurrencyValid = false
+  if (isCurrencyAString) {
+    // this is to prevent an error from the trim method
+    isCurrencyValid = isValidCurrency(Currency)
+  }
 
   
   // Currency Country Errors

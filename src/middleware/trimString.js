@@ -14,7 +14,12 @@ const trimString = (req, res, next) => {
   req.body.Customer.FullName = trimStringValues(Customer.FullName)
   req.body.PaymentEntity.Issuer = trimStringValues(PaymentEntity.Issuer)
   req.body.PaymentEntity.Number = trimStringValues(PaymentEntity.Number)
-  req.body.PaymentEntity.Brand = trimStringValues(PaymentEntity.Brand)
+
+  if (PaymentEntity.Brand) {
+    // Brand is the only optional string here
+    // This will prevent it from erroring out due to the trim method
+    req.body.PaymentEntity.Brand = trimStringValues(PaymentEntity.Brand)
+  }
   req.body.PaymentEntity.Type = trimStringValues(PaymentEntity.Type)
   req.body.PaymentEntity.Country = trimStringValues(PaymentEntity.Country)
 
