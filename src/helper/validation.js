@@ -13,16 +13,23 @@ export const isInteger = (val) => {
   return typeof val !== undefined
   && (val === parseInt(val, 10));
 }
-export const isPositiveInteger = (val) => isInteger(val) && val >= 0
+export const isPositiveInteger = (val) => isInteger(val) && val > 0
+// !isNaN(val - parseFloat(val)) will match string numerics like "5000.2"
+export const isNumeric = (val) => !isString(val) && !isNaN(val - parseFloat(val)) && val > 0
+
 export const isString = (val) => typeof val === string || val instanceof String
 export const isValidCurrency = (val) => {
-  const currenciesWithOnlyThreeLetterSymbol = listOfCurrencies().map(currency => currency.cc);
-  return currenciesWithOnlyThreeLetterSymbol.includes(val.trim())
+  // trim white spaces in the currency values to be searched for
+  const currency = listOfCurrencies().find(currency => currency.cc === val.trim());
+  // if the currency is found, it won't be undefined
+  return !isUndefined(currency)
 }
 
 export const isValidTwoLetterCodeCountry = (val) => {
-  const listOfTwoLetterCodeCountries = listOfCountries().map(country => country.alpha2.toUpperCase())
-  return listOfTwoLetterCodeCountries.includes(val.trim())
+  // trim white spaces in the currency values to be searched for
+  const twoLetterCodeCountry = listOfCountries().find(country => country.alpha2.toUpperCase() === val.trim())
+  // if the twoLetterCodeCountry is found, it won't be undefined
+  return !isUndefined(twoLetterCodeCountry)
 }
 
 export const isValidEmail = (email) => {
@@ -36,7 +43,8 @@ export const isValidEmail = (email) => {
 
 export const isCustomerNameValid = (val) => {
   const validationRegexForOnlyLettersAndSpace = /^[a-zA-Z\s]*$/
-  return validationRegexForOnlyLettersAndSpace.test(val);
+  // the regex will match null, true, and false
+  return isString(val) && validationRegexForOnlyLettersAndSpace.test(val) ;
 }
 
 export const isBoolean = (val) => {
@@ -61,6 +69,9 @@ export const isValidMaskedCardNumber = (val) => {
 }
 
 export const isValidSixID = (SixID, CardNumber) => {
-  const firstSixDigitsOfCardNumber = CardNumber.substring(0, 6);
-  return SixID.toString().length === 6 && SixID === firstSixDigitsOfCardNumber
+  let firstSixDigitsOfCardNumber = '';
+  if (CardNumber) {
+    firstSixDigitsOfCardNumber = CardNumber.trim().substring(0, 6);
+  }
+  return SixID.trim().length === 6 && SixID.trim() === firstSixDigitsOfCardNumber
 }

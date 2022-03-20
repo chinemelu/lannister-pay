@@ -1,6 +1,7 @@
 import { 
   isInputEmpty, 
   isPositiveInteger, 
+  isNumeric,
   isValidCurrency, 
   isValidTwoLetterCodeCountry,
   isValidEmail,
@@ -30,7 +31,7 @@ export const computeTransactionFeesValidationMiddleware = (req, res, next) => {
 
   // amount errors
   const isAmountEmpty = isInputEmpty(Amount)
-  const isAmountAPositiveInteger = isPositiveInteger(Amount)
+  const isAmountAPositiveNumber = isNumeric(Amount)
 
   // currency
   const isCurrencyEmpty = isInputEmpty(Currency)
@@ -56,7 +57,12 @@ export const computeTransactionFeesValidationMiddleware = (req, res, next) => {
   let isCustomerIDEmpty = true;
   let isCustomerIDAPositiveInteger = false; 
   let isCustomerEmailEmpty = true
+  let isCustomerEmailAString = isString(Customer.EmailAddress)
   let isCustomerEmailValid = false;
+
+  if (isCustomerEmailAString) {
+    isCustomerEmailValid = isValidEmail(Customer.EmailAddress)
+  }
 
     // full name
   let isCustomerFullNameEmpty = true
@@ -74,7 +80,6 @@ export const computeTransactionFeesValidationMiddleware = (req, res, next) => {
 
   if (!isCustomerObjectUndefined && !isUndefined(Customer.EmailAddress)) {
     isCustomerEmailEmpty = isInputEmpty(Customer.EmailAddress)
-    isCustomerEmailValid = isValidEmail(Customer.EmailAddress)
   }
 
   if (!isCustomerObjectUndefined && !isUndefined(Customer.FullName)) {
@@ -137,13 +142,16 @@ export const computeTransactionFeesValidationMiddleware = (req, res, next) => {
   if (!isPaymentEntityObjectUndefined && !isUndefined(PaymentEntity.Number)) {
     isPaymentEntityNumberEmpty = isInputEmpty(PaymentEntity.Number)
     isPaymentEntityNumberAString = isString(PaymentEntity.Number)
-    isPaymentEntityNumberValid = isValidMaskedCardNumber(PaymentEntity.Number)
+    if (isPaymentEntityNumberAString) {
+      isPaymentEntityNumberValid = isValidMaskedCardNumber(PaymentEntity.Number)
+    }
   }
 
   if (!isPaymentEntityObjectUndefined && !isUndefined(PaymentEntity.SixID)) {
     isPaymentEntitySixIDEmpty = isInputEmpty(PaymentEntity.SixID)
     isPaymentEntitySixIDAString = isString(PaymentEntity.SixID)
-    if (isPaymentEntitySixIDAString) {
+    if (isPaymentEntitySixIDAString && isPaymentEntityNumberAString) {
+      // this is to prevent an error from the substring method
       isPaymentEntitySixIDValid = isValidSixID(PaymentEntity.SixID, PaymentEntity.Number)
     }
   }
@@ -151,8 +159,14 @@ export const computeTransactionFeesValidationMiddleware = (req, res, next) => {
   if (!isPaymentEntityObjectUndefined && !isUndefined(PaymentEntity.Type)) {
     isPaymentEntityTypeEmpty = isInputEmpty(PaymentEntity.Type)
     isPaymentEntityTypeAString = isString(PaymentEntity.Type)
-    isPaymentEntityTypeValid = isValidPaymentEntityType(PaymentEntity.Type)
-    isPaymentEntityTypeACard= paymentEntityTypeIsACard(PaymentEntity.Type)
+    if (isPaymentEntityTypeAString) {
+      // this is to prevent an error from the trim method
+      isPaymentEntityTypeValid = isValidPaymentEntityType(PaymentEntity.Type)
+    }
+    if (isPaymentEntityTypeAString) {
+      // this is to prevent an error from the trim method
+      isPaymentEntityTypeACard = paymentEntityTypeIsACard(PaymentEntity.Type)
+    }
   }
 
   if (!isPaymentEntityObjectUndefined && !isUndefined(PaymentEntity.Country)) {
@@ -171,7 +185,7 @@ export const computeTransactionFeesValidationMiddleware = (req, res, next) => {
   }
 
   if (!isIDEmpty && !isIDAPositiveInteger) {
-    errors.ID = 'ID should be a positive integer'
+    errors.ID = 'ID should be an integer greater than 0'
   }
 
   // amount 
@@ -179,8 +193,8 @@ export const computeTransactionFeesValidationMiddleware = (req, res, next) => {
     errors.Amount = 'Amount is required'
   }
 
-  if (!isAmountEmpty && !isAmountAPositiveInteger) {
-    errors.Amount = 'Amount should be a positive integer'
+  if (!isAmountEmpty && !isAmountAPositiveNumber) {
+    errors.Amount = 'Amount should be a number greater than 0'
   }
 
   // currency
@@ -215,7 +229,7 @@ export const computeTransactionFeesValidationMiddleware = (req, res, next) => {
   }
 
   if (!isCustomerIDEmpty && !isCustomerIDAPositiveInteger) {
-    errors.CustomerID = 'Customer ID should be a positive integer'
+    errors.CustomerID = 'Customer ID should be an integer greater than 0'
   }
 
   // Customer Email
@@ -249,7 +263,7 @@ export const computeTransactionFeesValidationMiddleware = (req, res, next) => {
   }
 
   if (!isPaymentEntityIDEmpty && !isPaymentEntityIDAPositiveInteger) {
-    errors.paymentEntityID = 'Payment Entity ID should be a positive integer'
+    errors.paymentEntityID = 'Payment Entity ID should be an integer greater than 0'
   }
 
   
@@ -265,7 +279,7 @@ export const computeTransactionFeesValidationMiddleware = (req, res, next) => {
 
   // payment entity brand 
   if (isPaymentEntityBrandEmpty && isPaymentEntityTypeACard) {
-    errors.PaymentEntityBrand = 'Payment Entity Brand is required'
+    errors.PaymentEntityBrand = 'Payment Entity Brand is required if payment entity type is a card'
   }
 
   if (!isPaymentEntityBrandEmpty && !isPaymentEntityTypeACard) {

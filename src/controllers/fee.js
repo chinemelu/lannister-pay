@@ -6,21 +6,9 @@ import { FCS_ARRAY_TEXT_FILE } from '../constants/file.js'
 
 export const postFeesController = async (req, res) => {
   try {
-
-    const unparsedFcsString = req.body.FeeConfigurationSpec
-
-
-    if (!unparsedFcsString) {
-      res.status(400).json({
-        message: 'No Fee Configuration Specification included',
-        statusCode: 400,
-      })
-      return
-    }
-
-    const unparsedFcsArray = unparsedFcsString.split(/\r\n|\r|\n/)
-
-    const parsedFcsArray = unparsedFcsArray.map(arrayElem => fcsParser(arrayElem))
+    // this is the validated unparsedFcsArray
+    const { unparsedFcsArray } = req
+    const parsedFcsArray = unparsedFcsArray.map(fcsParser)
 
     // the array is converted to a string as a valid parameter for the writeFile function
     const stringifiedParsedFcsArray = JSON.stringify(parsedFcsArray)
@@ -31,9 +19,9 @@ export const postFeesController = async (req, res) => {
       status: "ok",
     })
   } catch(error) {
-      res.status(500).json({
-        error
-      })
+    res.status(500).json({
+      error: error.message
+    })
   }
 }
 
